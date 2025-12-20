@@ -79,8 +79,8 @@ r = redis.Redis(
     host="127.0.0.1",
     port=6379,)
 
-API_ID = int("8186557")
-API_HASH = "efd77b34c69c164ce158037ff5a0d117"
+API_ID = int("24722068")
+API_HASH = "72feca3ed88891eeff3852e20817cdca"
 Bots = []
 Musi = []
 CASER = [] 
@@ -1008,4 +1008,5 @@ async def gvhfbcfvjgbus(client, message):
     if not message.from_user.username in DEVS and not message.from_user.username in DEVSs:
         return
     kep = ReplyKeyboardMarkup([["الاحصائيات"], ["اذاعة بالتوجيه", "اذاعة", "اذاعة بالتثبيت"], ["رجوع"]], resize_keyboard=True)
+
     await message.reply_text("╮⦿ اهـلا بڪ عزيـزي المطـور الاساسـي │⎋ اليك قسم تحكم الصانع", reply_markup=kep)
