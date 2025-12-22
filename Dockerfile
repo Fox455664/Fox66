@@ -1,19 +1,14 @@
-cat <<EOF > Dockerfile
 FROM python:3.9-slim-buster
 
-RUN apt-get update && apt-get install -y \\
-    git \\
-    python3-pip \\
-    ffmpeg \\
-    curl \\
-    && rm -rf /var/lib/apt/lists/*
-
+# تحديد مجلد العمل داخل الحاوية
 WORKDIR /app
 
+# نسخ ملف المتطلبات وتثبيتها
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
+# نسخ باقي ملفات المشروع
 COPY . .
 
-CMD ["python3", "main.py"]
-EOF
+# الأمر لتشغيل تطبيقك (تأكد من أن اسم الملف main.py أو غيره حسب مشروعك)
+CMD ["python", "main.py"]
