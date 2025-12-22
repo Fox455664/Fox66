@@ -1,14 +1,44 @@
-FROM python:3.9-slim-buster
+FROM python:3.9-slim
 
-# تحديد مجلد العمل داخل الحاوية
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    git \
+    redis-server \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+RUN pip install --no-cache-dir \
+    pyrogram==2.0.106 \
+    tgcrypto \
+    ntgcalls==1.1.3 \
+    py-tgcalls==1.1.6 \
+    yt-dlp \
+    youtube-search-python \
+    youtube-search \
+    aiohttp \
+    Pillow \
+    numpy \
+    unidecode \
+    aiofiles \
+    pyromod \
+    requests \
+    redis \
+    gTTS \
+    pytz \
+    kvsqlite \
+    beautifulsoup4 \
+    telegraph \
+    wget \
+    python-dotenv \
+    lyricsgenius \
+    flask
+
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
-
-# نسخ ملف المتطلبات وتثبيتها
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# نسخ باقي ملفات المشروع
 COPY . .
 
-# الأمر لتشغيل تطبيقك (تأكد من أن اسم الملف main.py أو غيره حسب مشروعك)
-CMD ["python", "main.py"]
+CMD redis-server --daemonize yes && python3 main.py
