@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-# 1. تثبيت مكتبات النظام الضرورية (بما في ذلك ملفات X11 المفقودة و Redis)
+# 1. تثبيت مكتبات النظام الضرورية
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ffmpeg \
     git \
@@ -15,9 +15,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 # 2. تحديث أدوات التثبيت
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# 3. تثبيت مكتبات بايثون (أضفت لك 'oldpyro' في القائمة)
+# 3. تثبيت جميع مكتبات بايثون المطلوبة (أضفت telethon و oldpyro)
 RUN pip install --no-cache-dir \
     pyrogram==2.0.106 \
+    telethon \
     tgcrypto \
     ntgcalls==1.1.3 \
     py-tgcalls==1.1.6 \
@@ -48,5 +49,5 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY . .
 
-# 4. تشغيل Redis في الخلفية ثم تشغيل البوت
+# 4. تشغيل Redis ثم البوت
 CMD redis-server --daemonize yes && python3 main.py
