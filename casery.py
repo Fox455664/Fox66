@@ -1,21 +1,21 @@
 ##مطورين السورس
-caes = ["f_o_x_351","P1_w5","C_HRr"]
-casery = "AlRa_dy"
+caes = ["f_o_x_351","Foxcc45","Fox567789"]
+casery = "f_o_x_351"
 ##ايدي مطور السورس الاساسي
 caserid = 7669264153
 ##اسم البوتات بالعربى
 OWNER = "فوكس"
 ##اسمك&الميوزك
-muusiic = "Al RaDy MuSiC" 
+muusiic = "fox MuSiC" 
 ##اسم السورس ع صوره التشغيل
-suorce = "SoUrCe Al RaDy" 
+suorce = "SoUrCe fox" 
 ##قناه السورس
-source = "https://t.me/HK_CI" 
-ch = "HK_CI" 
+source = "https://t.me/fox68899" 
+ch = "fox68899" 
 ##جروب السورس
-group = "https://t.me/B_M_S_R" 
+group = "https://t.me/fox68899" 
 ##لوجو السورس(صوره السورس) 
-photosource = "https://graph.org/file/5f835c5809ebce4f30e4d.jpg"
+photosource = "https://t.me/fox68899/22604"
 ##توكن الصانع
 bot_token="8550161677:AAFAMOORMi_TVRg5uvbObV9GAqext4HdW10"
 ##جلسه الاشتراك
