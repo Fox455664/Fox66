@@ -1,48 +1,56 @@
 import os
 import sys
 import subprocess
+import threading
+import asyncio
+from flask import Flask
 
-# --- كود التثبيت التلقائي المطور لحل جميع المشاكل السابقة ---
+# 1. إنشاء سيرفر وهمي لإرضاء نظام Koyeb (Health Check)
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "Bot is Running!", 200
+
+def run_flask():
+    try:
+        # التشغيل على المنفذ 8000 الذي يطلبه Koyeb
+        app.run(host='0.0.0.0', port=8000)
+    except Exception as e:
+        print(f"Flask Error: {e}")
+
+# تشغيل السيرفر في خيط منفصل لكي لا يعطل البوت
+threading.Thread(target=run_flask, daemon=True).start()
+
+# 2. كود التأكد من تثبيت جميع المكتبات اللازمة
 def install_missing_libraries():
-    # أضفت pytube للقائمة
-    required_packages = ["telethon", "oldpyro", "pytube", "pyromod"]
-    
+    required_packages = ["telethon", "oldpyro", "pytube", "flask", "pyromod", "pytgcalls"]
     for package in required_packages:
         try:
-            # محاولة استدعاء المكتبة للتأكد من وجودها
-            if package == "pytube":
-                import pytube
-            elif package == "telethon":
-                import telethon
-            elif package == "oldpyro":
-                import oldpyro
-            else:
-                __import__(package)
+            __import__(package)
         except ImportError:
             print(f"🔄 جاري تثبيت المكتبة الناقصة: {package}...")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-                print(f"✅ تم تثبيت {package} بنجاح.")
-            except Exception as e:
-                print(f"❌ فشل تثبيت {package}: {e}")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# تنفيذ التثبيت فوراً قبل أي استدعاء آخر
+# تنفيذ التثبيت قبل بدء البوت
 install_missing_libraries()
-# -------------------------------------------------------
 
-import asyncio
+# 3. استيراد ملفات البوت وتشغيله
 from pytgcalls import idle
-import random
-from pyrogram import Client
-from pytgcalls import PyTgCalls
-from bot import *
 from pyromod import listen
+try:
+    from bot import start_zombiebot
+except ImportError:
+    print("❌ خطأ: لم يتم العثور على دالة start_zombiebot في ملف bot.py")
 
-# تشغيل البوت
+async def main():
+    print("✅ تم تشغيل السيرفر الوهمي والمكتبات بنجاح..")
+    print("🚀 جاري تشغيل البوت الآن...")
+    try:
+        await start_zombiebot()
+    except Exception as e:
+        print(f"❌ خطأ أثناء تشغيل البوت: {e}")
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    try:
-        # ملاحظة: تأكد أن start_zombiebot معرفة داخل ملف bot.py
-        loop.run_until_complete(start_zombiebot())
-    except Exception as e:
-        print(f"❌ خطأ في التشغيل النهائي: {e}")
+    loop.run_until_complete(main())
