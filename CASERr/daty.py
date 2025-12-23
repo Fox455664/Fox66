@@ -1,112 +1,58 @@
-import asyncio
-from pytgcalls import idle
 import os
-import sys
-import random
-import asyncio
-import redis, re
+import redis
 from pyrogram import Client
 from pytgcalls import PyTgCalls
-from config import user, dev, call, logger, logger_mode, botname, appp
-from bot import bot_id
+from config import user, dev, call, logger
 
-API_ID = int("8186557")
-API_HASH = "efd77b34c69c164ce158037ff5a0d117"
+# سحب البيانات من Koyeb
+API_ID = int(os.getenv("API_ID", "25761783"))
+API_HASH = os.getenv("API_HASH", "7770de22ee036afb30a99d449c51f4b8")
 
-r = redis.Redis(
-    host="127.0.0.1",
-    port=6379,)
-
-def add_Bots(bots):
-    if is_Bots(bots):
-        return
-    r.sadd(f"maker{bot_id}", str(bots))
-
-def is_Bots(bots):
-    try:
-        a = get_Bots()
-        if bots in a:
-            return True
-        return False
-    except:
-        return False
-
-def del_Bots(bots):
-    if not is_Bots(bots):
-        return False
-    r.srem(f"maker{bot_id}", str(bots))
+# الاتصال بقاعدة بيانات Redis (Upstash)
+REDIS_URL = os.getenv("REDIS_URL", "redis-cli --tls -u redis://default:AbvlAAIncDEzYTgwNjBhYTRjNzI0N2NiODZjZGEwY2ZmMmIxOGI2YnAxNDgxMDE@ultimate-ferret-48101.upstash.io:6379")
+r = redis.from_url(REDIS_URL, decode_responses=False)
 
 def get_Bots():
     try:
         lst = []
-        for a in r.smembers(f"maker{bot_id}"):
+        # بنخزن البوتات في مفتاح اسمه maker_bots
+        for a in r.smembers("maker_bots"):
             lst.append(eval(a.decode('utf-8')))
         return lst
     except:
         return []
-        
-async def get_dev(bot_username):
-  dev_id = dev.get(bot_username)
-  if not dev_id:
-   for x in get_Bots():
-    if x[0] == bot_username:
-     dev_id = x[1]
-     dev[bot_username] = dev_id
-     return dev_id
-  return dev_id
 
-async def get_logger(bot_username):
-  logg = logger.get(bot_username)
-  if not logg:
-   for x in get_Bots():
-    if x[0] == bot_username:
-     logg = x[4]
-     logger[bot_username] = logg
-     return logg
-  return logg
-  
-async def get_owner_id(client):
-    bot_username = client.me.username
+async def get_dev(bot_username):
+    # بيجيب ايدي المطور من المتغيرات أو من الداتا
+    owner = os.getenv("OWNER_ID")
+    if owner: return int(owner)
+    for x in get_Bots():
+        if x[0] == bot_username: return x[1]
+    return 7669264153
+
+async def get_userbot(bot_username):
+    if bot_username in user: return user[bot_username]
     for x in get_Bots():
         if x[0] == bot_username:
-            owner_id = x[1]
-            dev[bot_username] = owner_id
-            return int(owner_id)
-            
-async def get_userbot(bot_username):
-  userbot = user.get(bot_username)
-  if not userbot:
-   for x in get_Bots():
-    if x[0] == bot_username:
-     SESSION = x[3]
-     userbot = Client("CASER", api_id=API_ID, api_hash=API_HASH, session_string=SESSION)
-     user[bot_username] = userbot
-     return userbot
-  return userbot
+            ubot = Client("CASER_ASSISTANT", api_id=API_ID, api_hash=API_HASH, session_string=x[3])
+            await ubot.start()
+            user[bot_username] = ubot
+            return ubot
+    return None
 
-async def del_userbot(bot_username):
-    if bot_username in user:
-        del user[bot_username]
-        print(f"تم حذف {bot_username} بنجاح.")
-    else:
-        print(f"{bot_username} غير موجود في التخزين.")
-  
-async def del_call(bot_username):
-    if bot_username in call:
-        del call[bot_username]
-        print(f"تم حذف {bot_username} بنجاح.")
-    else:
-        print(f"{bot_username} غير موجود في التخزين.")
-  
 async def get_call(bot_username):
-  calll = call.get(bot_username)
-  if not calll:
-   for x in get_Bots():
-    if x[0] == bot_username:
-     userbot = await get_userbot(bot_username)
-     calo = PyTgCalls(userbot, cache_duration=100)
-     await calo.start()
-     call[bot_username] = calo
-     return calo
-  return calll  
-  
+    if bot_username in call: return call[bot_username]
+    ubot = await get_userbot(bot_username)
+    if ubot:
+        calo = PyTgCalls(ubot, cache_duration=100)
+        await calo.start()
+        call[bot_username] = calo
+        return calo
+    return None
+
+async def get_logger(bot_username):
+    log_id = os.getenv("LOGGER_ID")
+    if log_id: return int(log_id)
+    for x in get_Bots():
+        if x[0] == bot_username: return x[4]
+    return None
