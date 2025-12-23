@@ -1,274 +1,246 @@
 import asyncio
-from pyrogram.types import (Message,InlineKeyboardButton,InlineKeyboardMarkup,CallbackQuery,ChatPrivileges)
-from pyrogram import filters, Client
-from pyrogram.enums import ChatMembersFilter
-from pyrogram.enums import ChatMemberStatus
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
-from pyrogram.types import *
-from pyrogram.errors import PeerIdInvalid
-from pyrogram.types import ChatPermissions, ChatPrivileges
-from aiohttp import ClientSession
-from pyrogram.types import (InlineKeyboardButton, ChatPermissions, InlineKeyboardMarkup, Message, User)
+import os
 import sys
+import random
 from datetime import datetime
-from pyrogram import enums
 from typing import Union, List, Iterable
-from pyrogram import Client as client
-from pyrogram.errors import FloodWait
-from pyrogram import Client, idle
-from random import randint
-from pyrogram.enums import ChatType
-from pyrogram.types import Chat, User
+
+from pyrogram import Client, filters, enums
+from pyrogram.types import (Message, InlineKeyboardButton, InlineKeyboardMarkup, 
+                            CallbackQuery, ChatPrivileges, ReplyKeyboardMarkup, 
+                            ChatPermissions, User)
+from pyrogram.errors import FloodWait, PeerIdInvalid
+
+# استيراد الإعدادات والداتا
 from config import *
 from config import user, dev, call, logger, logger_mode, botname, appp
 from CASERr.daty import get_call, get_userbot, get_dev, get_logger
 from CASERr.CASERr import get_channel, devchannel, source, caes, johned
-#............................................ المساعد  ...........................................................................    
-@Client.on_message(filters.command("فحص المساعد", ""), group=5865)
-async def userrrrr(client: Client, message):
-   bot_username = client.me.username
-   dev = await get_dev(bot_username)
-   if message.chat.id == dev or message.chat.username in caes:
-    client = await get_userbot(bot_username)
-    mm = await message.reply_text("Collecting stats")
-    start = datetime.now()
-    u = 0
-    g = 0
-    sg = 0
-    c = 0
-    b = 0
-    a_chat = 0
-    Meh = client.me
-    usere = Meh.mention
-    async for dialog in client.get_dialogs():
-        type = dialog.chat.type
-        if enums.ChatType.PRIVATE == type:
-            u += 1
-        elif enums.ChatType.BOT == type:
-            b += 1
-        elif enums.ChatType.GROUP == type:
-            g += 1
-        elif enums.ChatType.SUPERGROUP == type:
-            sg += 1
-            user_s = await dialog.chat.get_member(int(Meh.id))
-            if user_s.status == enums.ChatMemberStatus.ADMINISTRATOR or user_s.status == enums.ChatMemberStatus.OWNER:
-                a_chat += 1
-        elif enums.ChatType.CHANNEL == type:
-            c += 1
-        else:
-          print(type)
 
-    end = datetime.now()
-    ms = (end - start).seconds
-    await mm.edit_text(
-        """**ꜱᴛᴀᴛꜱ ꜰᴇᴀᴛᴄʜᴇᴅ ɪɴ {} ꜱᴇᴄᴏɴᴅꜱ .**
-.**ʏᴏᴜ ʜᴀᴠᴇ {} ᴘʀɪᴠᴀᴛᴇ ᴍᴇꜱꜱᴀɢᴇꜱ.**
-🏷️**ʏᴏᴜ ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ {} ɢʀᴏᴜᴘꜱ.**
-🏷️**ʏᴏᴜ ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ {} ꜱᴜᴘᴇʀ ɢʀᴏᴜᴘꜱ.**
-🏷️**ʏᴏᴜ ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ {} ᴄʜᴀɴɴᴇʟꜱ.**
-🏷️**ʏᴏᴜ ᴀʀᴇ ᴀᴅᴍɪɴꜱ ɪɴ {} ᴄʜᴀᴛꜱ.**
-🏷️**ʙᴏᴛꜱ ɪɴ ʏᴏᴜʀ ᴘʀɪᴠᴀᴛᴇ = {}**
-⚠️**ꜰᴇᴀᴛᴄʜᴇᴅ ʙʏ ᴜꜱɪɴɢ {} **""".format(
-            ms, u, g, sg, c, a_chat, b, usere
-        )
-    )
-#............................................ المساعد  ...........................................................................    
-#............................................ تغير الاسم  ...........................................................................    
+# ............................................ فحص المساعد ...........................................................    
+@Client.on_message(filters.command("فحص المساعد", ""), group=5865)
+async def helper_stats(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    
+    # التحقق من أن المرسل هو المطور
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        assistant = await get_userbot(bot_username)
+        mm = await message.reply_text("🔎 جاري فحص حالة الحساب المساعد واستخراج الإحصائيات...")
+        
+        start = datetime.now()
+        u, g, sg, c, b, a_chat = 0, 0, 0, 0, 0, 0
+        
+        async for dialog in assistant.get_dialogs():
+            chat_type = dialog.chat.type
+            if chat_type == enums.ChatType.PRIVATE:
+                u += 1
+            elif chat_type == enums.ChatType.BOT:
+                b += 1
+            elif chat_type == enums.ChatType.GROUP:
+                g += 1
+            elif chat_type == enums.ChatType.SUPERGROUP:
+                sg += 1
+                try:
+                    member = await dialog.chat.get_member(assistant.me.id)
+                    if member.status in [enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER]:
+                        a_chat += 1
+                except:
+                    pass
+            elif chat_type == enums.ChatType.CHANNEL:
+                c += 1
+
+        end = datetime.now()
+        duration = (end - start).seconds
+        
+        text = f"""
+✅ **تم فحص المساعد بنجاح في {duration} ثانية**
+
+👤 **الاسم:** {assistant.me.first_name}
+🆔 **الايدي:** `{assistant.me.id}`
+
+📊 **الإحصائيات:**
+• الخاص: {u}
+• البوتات: {b}
+• المجموعات: {g}
+• المجموعات الخارقة: {sg}
+• القنوات: {c}
+• مشرف في: {a_chat} چات
+
+⚠️ **تم الفحص بواسطة:** {assistant.me.mention}
+"""
+        await mm.edit_text(text)
+
+# ............................................ تعديلات البروفايل ...........................................................    
+
 @Client.on_message(filters.command("تغير الاسم الاول", ""), group=58650)
-async def changefisrt(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   try:
-    name = await client.ask(message.chat.id, "ارسل الان الاسم الجديد")
-    name = name.text
-    client = await get_userbot(bot_username)
-    await client.update_profile(first_name=name)
-    await message.reply_text("**تم تغير اسم الحساب المساعد بنجاح ..**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير الاسم \n {es}")
-#............................................ تغير الاسم  ...........................................................................    
-#............................................ تغير البايو  ...........................................................................    
+async def change_helper_name(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            ask = await client.ask(message.chat.id, "📝 ارسل الآن الاسم الجديد الذي تريده للمساعد:", timeout=60)
+            new_name = ask.text
+            assistant = await get_userbot(bot_username)
+            await assistant.update_profile(first_name=new_name)
+            await message.reply_text(f"✅ تم تغيير اسم المساعد إلى: **{new_name}**")
+        except Exception as e:
+            await message.reply_text(f"❌ حدث خطأ: {e}")
+
 @Client.on_message(filters.command("تغير البايو", ""), group=586505)
-async def changebio(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   try:
-    name = await client.ask(message.chat.id, "ارسل الان البايو الجديد")
-    name = name.text
-    client = await get_userbot(bot_username)
-    await client.update_profile(bio=name)
-    await message.reply_text("**تم تغير البايو بنجاح ..**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير البايو \n {es}")
-#............................................ تغير البايو  ...........................................................................    
+async def change_helper_bio(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            ask = await client.ask(message.chat.id, "📝 ارسل الآن البايو (Bio) الجديد:", timeout=60)
+            new_bio = ask.text
+            assistant = await get_userbot(bot_username)
+            await assistant.update_profile(bio=new_bio)
+            await message.reply_text("✅ تم تحديث البايو الخاص بالمساعد بنجاح.")
+        except Exception as e:
+            await message.reply_text(f"❌ حدث خطأ: {e}")
 
 @Client.on_message(filters.command("تغير اسم المستخدم", ""), group=586502)
-async def changeusername(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   try:
-    name = await client.ask(message.chat.id, "ارسل الان اسم المستخدم الجديد")
-    name = name.text
-    client = await get_userbot(bot_username)
-    await client.set_username(name)
-    await message.reply_text("**تم تغير اسم المستخدم بنجاح ..**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير اسم المستخدم \n {es}")
+async def change_helper_username(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            ask = await client.ask(message.chat.id, "📝 ارسل اليوزر (Username) الجديد بدون @:", timeout=60)
+            new_user = ask.text
+            assistant = await get_userbot(bot_username)
+            await assistant.set_username(new_user)
+            await message.reply_text(f"✅ تم تغيير يوزر المساعد إلى: @{new_user}")
+        except Exception as e:
+            await message.reply_text(f"❌ حدث خطأ (ربما اليوزر مأخوذ أو غير متاح): {e}")
 
 @Client.on_message(filters.command(["اضافه صوره"], ""), group=5865067)
-async def changephoto(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  user = await get_userbot(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   try:
-    m = await client.ask(message.chat.id, "قم بإرسال الصوره الجديده الان")
-    photo = m.photo
-    photo = await client.download_media(photo)
-    await user.set_profile_photo(photo=photo)
-    await message.reply_text("**تم تغير صوره الحساب المساعد بنجاح ..**") 
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير الصوره \n {es}")
+async def add_helper_photo(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            ask = await client.ask(message.chat.id, "📸 قم بإرسال الصورة الآن:", timeout=120)
+            if not ask.photo:
+                return await message.reply_text("❌ يجب إرسال صورة حصراً.")
+            
+            photo_path = await ask.download()
+            assistant = await get_userbot(bot_username)
+            await assistant.set_profile_photo(photo=photo_path)
+            await message.reply_text("✅ تم تغيير صورة الحساب المساعد.")
+            if os.path.exists(photo_path): os.remove(photo_path)
+        except Exception as e:
+            await message.reply_text(f"❌ حدث خطأ: {e}")
 
 @Client.on_message(filters.command(["ازاله صوره"], ""), group=5865084)
-async def changephotos(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-       try:
-        user = await get_userbot(bot_username)
-        async for photos in user.get_chat_photos("me"):
-         await user.delete_profile_photos([p.file_id for p in photos[1:]])
-         await message.reply_text("**تم ازاله صوره بنجاح ..**")
-       except Exception as es:
-         await message.reply_text(f" حدث خطأ أثناء ازاله الصوره \n {es}")
+async def remove_helper_photo(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            assistant = await get_userbot(bot_username)
+            photos = [p async for p in assistant.get_chat_photos("me")]
+            if photos:
+                await assistant.delete_profile_photos(photos[0].file_id)
+                await message.reply_text("✅ تم حذف صورة البروفايل الحالية.")
+            else:
+                await message.reply_text("❌ المساعد لا يملك صورة حالياً.")
+        except Exception as e:
+            await message.reply_text(f"❌ خطأ أثناء الإزالة: {e}")
 
+# ............................................ التحكم في المجموعات ...........................................................    
 
 @Client.on_message(filters.command("دعوه المساعد الي الانضمام", ""), group=5865024)
-async def joined(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   try:
-    name = await client.ask(message.chat.id, "ارسل الان الرابط")
-    name = name.text
-    if "https" in name:
-     if not "+" in name: 
-       name = name.replace("https://t.me/", "")
-    client = await get_userbot(bot_username)
-    await client.join_chat(name)
-    await message.reply_text("**تم انضمام الحساب المساعد بنجاح ..**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء الانضمام \n {es}")
+async def helper_join_chat(client: Client, message: Message):
+    bot_username = client.me.username
+    owner_id = await get_dev(bot_username)
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        try:
+            ask = await client.ask(message.chat.id, "🔗 ارسل رابط الجروب أو اليوزر الآن:", timeout=60)
+            link = ask.text.replace("https://t.me/", "")
+            assistant = await get_userbot(bot_username)
+            await assistant.join_chat(link)
+            await message.reply_text("✅ انضم المساعد بنجاح.")
+        except Exception as e:
+            await message.reply_text(f"❌ فشل الانضمام: {e}")
+
+# ............................................ الإذاعة بالمساعد ...........................................................    
 
 @Client.on_message(filters.command(["توجيه عام بالمساعد", "اذاعه عام بالمساعد"], ""), group=58650417)
-async def cast5(client: Client, message):
-  command = message.command[0]
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in caes:
-   kep = ReplyKeyboardMarkup([["الغاء"], ["عوده لقسم المساعد"], ["رجوع للتحكم الكامل"]], resize_keyboard=True)
-   ask = await client.ask(message.chat.id, "قم بإرسال الاذاعه الخاصه بك", reply_markup=kep)
-   x = ask.id
-   y = message.chat.id
-   if ask.text == "الغاء":
-     return await ask.reply_text("**تم الالغاء بنجاح ✅**")
-   pn = await client.ask(message.chat.id, "هل تريد تثبيت الاذاعه\nارسل « نعم » او « لا »")
-   await message.reply_text("**جاري الاذاعه انتظر بعض الوقت ...**")
-   text = ask.text
-   dn = 0
-   fd = 0
-   if command == "اذاعه عام بالمساعد":
-     user = await get_userbot(bot_username)
-     async for i in user.get_dialogs():
-         try:
-           m = await user.send_message(chat_id=i.chat.id, text=text)
-           dn += 1
-           if pn.text == "نعم":
-                try:
-                 await m.pin(disable_notification=False)
-                except:
-                   continue
-         except FloodWait as e:
-                    flood_time = int(e.value)
-                    if flood_time > 200:
-                        continue
-                    await asyncio.sleep(flood_time)
-         except Exception as e:
-                    fd += 1
-                    continue
-     return await message.reply_text(f"**تمت الاذاعه بنجاح ..**\n\n**تمت الاذاعه الي : {dn}**\n**وفشل : {fd}**")
-   elif command == "توجيه عام بالمساعد":
-     client = await get_userbot(bot_username)
-     async for i in client.get_dialogs():
-         try:
-           m = await client.forward_messages(
-               chat_id=i.chat.id,
-               from_chat_id=message.chat.username,
-               message_ids=int(x),
-               )
-           dn += 1
-           if pn.text == "نعم":
-                try:
-                 await m.pin(disable_notification=False)
-                except:
-                   continue
-         except FloodWait as e:
-                    flood_time = int(e.value)
-                    if flood_time > 200:
-                        continue
-                    await asyncio.sleep(flood_time)
-         except Exception as e:
-                    fd += 1
-                    continue
-     return await message.reply_text(f"**تمت الاذاعه بنجاح ..**\n\n**تمت الاذاعه الي : {dn}**\n**وفشل : {fd}**")
-
-@Client.on_message(filters.command(["حذف","مسح"], ""), group=5675436417)
-async def arejg6574ply(client, message):
+async def helper_broadcast(client: Client, message: Message):
+    command = message.command[0]
     bot_username = client.me.username
-    user = await get_userbot(bot_username)
-    chat_id = message.chat.id  
-    text = int(message.text.split(None, 1)[1])
-    async for h in user.get_chat_history(message.chat.id, limit=text):
-        await client.delete_messages(chat_id, h.id)
+    owner_id = await get_dev(bot_username)
+    
+    if message.from_user.id == owner_id or message.from_user.username in caes:
+        ask = await client.ask(message.chat.id, "📢 ارسل الآن (النص أو الوسائط) التي تريد إذاعتها بالمساعد:", timeout=300)
+        if ask.text == "الغاء": return await ask.reply_text("✅ تم الإلغاء.")
+        
+        await message.reply_text("⏳ جاري الإذاعة لجميع المحادثات.. قد يستغرق هذا وقتاً طويلاً.")
+        
+        assistant = await get_userbot(bot_username)
+        done, fail = 0, 0
+        
+        async for dialog in assistant.get_dialogs():
+            try:
+                if "اذاعه" in command:
+                    await ask.copy(dialog.chat.id)
+                else:
+                    await ask.forward(dialog.chat.id)
+                done += 1
+                await asyncio.sleep(0.3) # لتجنب الحظر
+            except FloodWait as e:
+                await asyncio.sleep(e.value)
+            except:
+                fail += 1
+        
+        await message.reply_text(f"✅ **تمت الإذاعة بنجاح!**\n\n• تم الإرسال إلى: {done}\n• فشل في: {fail}")
 
-@Client.on_message(filters.command(["مسح رسايله","حذف رسايله","مسح الكل","حذف الكل","مسح رسايل","حذف رسايل","مسح كل","حذف كل"], ""), group=5607684417)
-async def delete_messages(client, message):
+# ............................................ الحذف والمسح ...........................................................    
+
+@Client.on_message(filters.command(["حذف", "مسح"], ""), group=5675436417)
+async def delete_messages_count(client: Client, message: Message):
     bot_username = client.me.username
-    user = await get_userbot(bot_username)
+    assistant = await get_userbot(bot_username)
+    try:
+        count = int(message.text.split(None, 1)[1])
+        deleted = 0
+        async for msg in assistant.get_chat_history(message.chat.id, limit=count):
+            try:
+                await msg.delete()
+                deleted += 1
+            except: pass
+        await message.reply_text(f"✅ تم مسح {deleted} رسالة من المحادثة.")
+    except:
+        await message.reply_text("❌ ارسل الأمر مع عدد الرسائل، مثال: `مسح 10`")
+
+@Client.on_message(filters.command(["مسح رسايله", "حذف رسايله"], ""), group=5607684417)
+async def delete_user_messages(client: Client, message: Message):
+    bot_username = client.me.username
+    assistant = await get_userbot(bot_username)
+    
     if message.reply_to_message:
         user_id = message.reply_to_message.from_user.id
-        replied_user = message.reply_to_message.from_user
-        chat_id = message.chat.id
-        async for h in user.get_chat_history(chat_id):
-            if h.from_user and h.from_user.id == user_id:
-                await client.delete_messages(chat_id, h.id)
-        print("تم حذف")     
+        await message.reply_text("⏳ جاري حذف رسائل هذا المستخدم..")
+        async for msg in assistant.get_chat_history(message.chat.id):
+            if msg.from_user and msg.from_user.id == user_id:
+                try: await msg.delete()
+                except: pass
+        await message.reply_text("✅ تم حذف جميع رسائل المستخدم المذكور.")
     else:
-        await message.reply("يرجى الرد على رسالة المستخدم الذي تريد حذف رسائله.")
-        
-@Client.on_message(filters.command(["مسح","حذف"], ""), group=567668784417)
-async def delete_mes1sages(client, message):
-    if message.reply_to_message:
-        await client.delete_messages(message.chat.id, message.reply_to_message.id)
-    else:
-        await message.reply("يرجى الرد على رسالة المستخدم الذي تريد حذفها.")
+        await message.reply_text("❌ رد على رسالة المستخدم الذي تريد حذف جميع رسائله.")
 
-import random
+# ............................................ التفاعلات التلقائية ...........................................................    
 
-ALI = ["👍", "❤", "🔥", "🥰", "🎉", "🤩", "🙏", "👌", "🕊", "😍", "😎","🍓","💋","💘","🌚"]
+REACTIONS = ["👍", "❤", "🔥", "🥰", "🎉", "🤩", "🙏", "👌", "🕊", "😍", "😎", "🍓", "💋", "💘", "🌚"]
 
 @Client.on_message(filters.channel, group=1234567)
-async def handle_message(client, message):
+async def auto_reaction_channels(client: Client, message: Message):
     bot_username = client.me.username
-    user = await get_userbot(bot_username)
-    chat_id = message.chat.id
-    message_id = message.id
-    T = random.choice(ALI)
+    assistant = await get_userbot(bot_username)
     try:
-        await user.send_reaction(chat_id, message_id, f"{T}")
-    except Exception as e:
-        print(f"حدث خطأ أثناء الانضمام: {str(e)}")
+        reaction = random.choice(REACTIONS)
+        await assistant.send_reaction(message.chat.id, message.id, reaction)
+    except:
+        pass
