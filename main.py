@@ -1,58 +1,31 @@
-import os
-import threading
-import asyncio
-import subprocess
-import sys
-import importlib
+import os, threading, asyncio, subprocess, sys, importlib
 from flask import Flask
 
-# 1. سيرفر Flask لإرضاء Koyeb (Health Check)
+# 1. سيرفر Koyeb الوهمي
 app = Flask(__name__)
-
 @app.route('/')
-def health_check():
-    return "Bot is Running!", 200
+def health(): return "Bot is Online!", 200
+def run_web(): app.run(host='0.0.0.0', port=8000)
+threading.Thread(target=run_web, daemon=True).start()
 
-def run_web_server():
-    try:
-        app.run(host='0.0.0.0', port=8000)
-    except Exception:
-        pass
-
-# تشغيل السيرفر فوراً
-threading.Thread(target=run_web_server, daemon=True).start()
-
-# 2. مثبت المكتبات الإجباري مع تحديث الـ Cache
-def force_install_libs():
-    # القائمة الكاملة والنهائية
-    libs = ["unidecode", "pytube", "telethon", "oldpyro", "flask", "pyro-listener", "youtube-search"]
-    
+# 2. مثبت المكتبات الإجباري (حل نهائي)
+def fix_libs():
+    libs = ["unidecode", "pytube", "telethon", "oldpyro", "flask", "pyro-listener", "youtube-search", "httpx==0.24.1"]
     for lib in libs:
         try:
-            # محاولة الاستدعاء للتأكد
-            module_name = lib.replace("-", "_")
-            importlib.import_module(module_name)
+            name = lib.split("==")[0].replace("-", "_")
+            importlib.import_module(name)
         except ImportError:
-            print(f"🔄 جاري تثبيت {lib} فوراً...")
             subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
-            # الخطوة السحرية: تحديث بايثون عشان يشوف المكتبة اللي لسه نازلة
             importlib.invalidate_caches()
-            print(f"✅ تم تثبيت وتفعيل {lib}")
 
-# تشغيل التثبيت الإجباري قبل استيراد أي حاجة من البوت
-force_install_libs()
+fix_libs()
 
-# 3. الآن نستورد البوت بأمان
+# 3. تشغيل البوت
 from bot import start_zombiebot
-
-async def start_app():
-    print("✅ السيرفر يعمل، المكتبات مفعلة، والآن وقت الانطلاق!")
-    print("🚀 جاري تشغيل بوت فوكس...")
-    try:
-        await start_zombiebot()
-    except Exception as e:
-        print(f"❌ خطأ أثناء التشغيل: {e}")
+async def start():
+    print("🔥 بوت فوكس المطور ينطلق الآن...")
+    await start_zombiebot()
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_app())
+    asyncio.get_event_loop().run_until_complete(start())
