@@ -7,11 +7,11 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# 2. تحديث pip وتثبيت كل المكتبات (ضفت youtube-search هنا برضه)
+# 2. تحديث pip وتثبيت كل المكتبات (تمت إضافة unidecode وكل المكتبات السابقة)
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir \
     pyrogram==2.0.106 telethon pytube flask oldpyro pyromod pyro-listener \
-    tgcrypto ntgcalls==1.1.3 py-tgcalls==1.1.6 yt-dlp \
+    tgcrypto ntgcalls==1.1.3 py-tgcalls==1.1.6 yt-dlp unidecode \
     youtube-search-python youtube-search aiohttp Pillow numpy aiofiles \
     requests redis gTTS pytz kvsqlite beautifulsoup4 \
     telegraph wget python-dotenv lyricsgenius
