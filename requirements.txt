@@ -13,6 +13,7 @@ numpy
 unidecode
 aiofiles
 pyromod
+pyro-listener
 requests
 redis
 gTTS
