@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-# 1. تثبيت مكتبات النظام الضرورية
+# 1. تثبيت مكتبات النظام الضرورية (التي تدعم الصوت والـ Redis)
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ffmpeg \
     git \
@@ -12,10 +12,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. تحديث أدوات التثبيت
+# 2. تحديث أدوات التثبيت الأساسية
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# 3. تثبيت جميع مكتبات بايثون المطلوبة (أضفت telethon و oldpyro)
+# 3. تثبيت جميع مكتبات بايثون المطلوبة (تم إضافة pytube هنا)
 RUN pip install --no-cache-dir \
     pyrogram==2.0.106 \
     telethon \
@@ -42,12 +42,13 @@ RUN pip install --no-cache-dir \
     wget \
     python-dotenv \
     lyricsgenius \
-    flask
+    flask \
+    pytube
 
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 COPY . .
 
-# 4. تشغيل Redis ثم البوت
+# 4. تشغيل خادم Redis في الخلفية ثم تشغيل البوت
 CMD redis-server --daemonize yes && python3 main.py
