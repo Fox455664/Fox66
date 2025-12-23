@@ -7,10 +7,10 @@ oldpyro
 yt-dlp
 youtube-search-python
 youtube-search
+unidecode
 aiohttp
 Pillow
 numpy
-unidecode
 aiofiles
 pyromod
 pyro-listener
