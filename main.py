@@ -5,9 +5,8 @@ import subprocess
 import sys
 from flask import Flask
 
-# 1. تشغيل سيرفر ويب بسيط للرد على Koyeb على منفذ 8000
+# 1. سيرفر وهمي لإرضاء نظام Koyeb
 app = Flask(__name__)
-
 @app.route('/')
 def health_check():
     return "OK", 200
@@ -18,30 +17,36 @@ def run_web_server():
     except Exception:
         pass
 
-# تشغيل السيرفر في الخلفية فوراً
 threading.Thread(target=run_web_server, daemon=True).start()
 
-# 2. مثبت المكتبات التلقائي (لضمان وجود pyrolistener وغيرها)
+# 2. مثبت المكتبات التلقائي المطور
 def install_libs():
-    libs = ["telethon", "oldpyro", "pytube", "flask", "pyrolistener"]
-    for lib in libs:
+    # المكتبات العادية
+    normal_libs = ["telethon", "oldpyro", "pytube", "flask", "pyromod"]
+    for lib in normal_libs:
         try:
             __import__(lib)
         except ImportError:
             subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+    
+    # تثبيت pyrolistener من الرابط المباشر
+    try:
+        __import__("pyrolistener")
+    except ImportError:
+        print("🔄 جاري تثبيت pyrolistener من GitHub...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/TeMeS-T/pyrolistener"])
 
 install_libs()
 
-# 3. استيراد وتشغيل البوت
+# 3. تشغيل البوت
 from bot import start_zombiebot
 
 async def start_app():
-    print("✅ السيرفر الوهمي يعمل والمكتبات جاهزة..")
-    print("🚀 جاري تشغيل بوت فوكس...")
+    print("✅ النظام جاهز والخدمات تعمل..")
     try:
         await start_zombiebot()
     except Exception as e:
-        print(f"❌ خطأ في التشغيل: {e}")
+        print(f"❌ خطأ: {e}")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
