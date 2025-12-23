@@ -5,52 +5,52 @@ import threading
 import asyncio
 from flask import Flask
 
-# 1. إنشاء سيرفر وهمي لإرضاء نظام Koyeb (Health Check)
-app = Flask(__name__)
-
+# --- سيرفر Flask لإبقاء البوت حياً على Koyeb مجاناً ---
+app = Flask(name)
 @app.route('/')
 def health_check():
     return "Bot is Running!", 200
 
 def run_flask():
-    try:
-        # التشغيل على المنفذ 8000 الذي يطلبه Koyeb
-        app.run(host='0.0.0.0', port=8000)
-    except Exception as e:
-        print(f"Flask Error: {e}")
+    app.run(host='0.0.0.0', port=8000)
 
-# تشغيل السيرفر في خيط منفصل لكي لا يعطل البوت
 threading.Thread(target=run_flask, daemon=True).start()
 
-# 2. كود التأكد من تثبيت جميع المكتبات اللازمة
+# --- تثبيت المكتبات الناقصة تلقائياً ---
 def install_missing_libraries():
-    required_packages = ["telethon", "oldpyro", "pytube", "flask", "pyromod", "pytgcalls"]
-    for package in required_packages:
+    pkgs = ["telethon", "oldpyro", "pytube", "flask", "pyromod", "pytgcalls"]
+    for p in pkgs:
         try:
-            __import__(package)
+            import(p)
         except ImportError:
-            print(f"🔄 جاري تثبيت المكتبة الناقصة: {package}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
 
-# تنفيذ التثبيت قبل بدء البوت
 install_missing_libraries()
 
-# 3. استيراد ملفات البوت وتشغيله
-from pytgcalls import idle
-from pyromod import listen
-try:
-    from bot import start_zombiebot
-except ImportError:
-    print("❌ خطأ: لم يتم العثور على دالة start_zombiebot في ملف bot.py")
+# --- إعدادات البوت (التي أرسلتها أنت) ---
+# ملاحظة: يفضل وضع هذه البيانات في ملف config.py إذا كان السورس يدعم ذلك
+caes = ["f_o_x_351","Foxcc45","Fox567789"]
+casery = "f_o_x_351"
+caserid = 7669264153
+OWNER = "فوكس"
+muusiic = "fox MuSiC" 
+suorce = "SoUrCe fox" 
+source = "https://t.me/fox68899" 
+ch = "fox68899" 
+group = "https://t.me/fox68899" 
+photosource = "https://t.me/fox68899/22604"
+# التوكنات (التي أرسلتها)
+BOT_TOKEN = "8550161677:AAFAMOORMi_TVRg5uvbObV9GAqext4HdW10"
+SESSION = "BAF5OpQAGRbP2KrVZiJGqhgbLnYFXLmSriIrIjPXaOfm7MrMZ9rOX1yVH8T_eMCrmJPOYfGB3jtKQ8X9weHJJ-D1Enrwncbn3oHA0FbSbR1SXATrTtH-F_l7ne-vQwAwyPCvoLVJt3PZhQwrPNGFngiIK0IfxVQ3SVmDHLFNQVsBpZDEf9v-fwwJ_VMPqH0uVZeAsxxBVba9ekoZmbW0tl8bTw4F7W8_4c759Sr5kG1iNFuj414KB2JHhc5sCqMwOhUfYbkWiLU3ECWPglPOD0JBdZM5utjfRioozZLIdE-Icl3teUk65KUwQyl8HA94f9HGYVOuj4eIwRhwkxCFxAQhCuZLdwAAAAHx6C_MAA"
+
+# --- تشغيل السورس ---
+from bot import start_zombiebot
 
 async def main():
-    print("✅ تم تشغيل السيرفر الوهمي والمكتبات بنجاح..")
-    print("🚀 جاري تشغيل البوت الآن...")
-    try:
-        await start_zombiebot()
-    except Exception as e:
-        print(f"❌ خطأ أثناء تشغيل البوت: {e}")
+    print("✅ السيرفر الوهمي يعمل على منفذ 8000")
+    print("🚀 جاري تشغيل بوت فوكس...")
+    await start_zombiebot()
 
-if __name__ == "__main__":
+if name == "main":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
