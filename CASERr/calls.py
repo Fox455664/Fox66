@@ -4,6 +4,10 @@ from CASERr.daty import get_call
 async def Call(bot_username):
     hoss = await get_call(bot_username)
 
+    # 🟢 التصحيح: لو مفيش مساعد شغال، اخرج فوراً عشان البوت ميقعش
+    if hoss is None:
+        return
+
     @hoss.on_stream_end()
     async def stream_end_handler(client, update: Update):
         if not isinstance(update, StreamAudioEnded):
