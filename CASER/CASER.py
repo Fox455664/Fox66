@@ -67,7 +67,7 @@ import asyncio
 import random
 from bot import DEVS, DEVSs
 from bot import bot_id as hos_id, lolo
-from CASERr.play import Call
+from CASERr.calls import Call
 from CASERr.hossam import mutegdv2d
 from CASERr.CASERr import photo_responses
 from CASERr.azan import azan, azkar, azkar_chatt, nday_catt
