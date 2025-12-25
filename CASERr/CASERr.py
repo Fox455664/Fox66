@@ -41,7 +41,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 name = f"{OWNER}"
 
 r = redis.Redis(
-    host="127.0.0.1",
+    host="ultimate-ferret-48101.upstash.io", password="AbvlAAIncDEzYTgwNjBhYTRjNzI0N2NiODZjZGEwY2ZmMmIxOGI2YnAxNDgxMDE", ssl=True,
     port=6379,)
 
 

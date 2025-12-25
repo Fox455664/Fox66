@@ -17,7 +17,7 @@ from casery import caserid
 OWNER_ID = int(f"{caserid}")
 
 r = redis.Redis(
-    host="127.0.0.1",
+    host="ultimate-ferret-48101.upstash.io", password="AbvlAAIncDEzYTgwNjBhYTRjNzI0N2NiODZjZGEwY2ZmMmIxOGI2YnAxNDgxMDE", ssl=True,
     port=6379,)
 
 Keyboard = ReplyKeyboardMarkup(

@@ -76,7 +76,7 @@ from casery import caes, casery, group, source, photosource, caserid, ch, OWNER
 
 
 r = redis.Redis(
-    host="127.0.0.1",
+    host="ultimate-ferret-48101.upstash.io", password="AbvlAAIncDEzYTgwNjBhYTRjNzI0N2NiODZjZGEwY2ZmMmIxOGI2YnAxNDgxMDE", ssl=True,
     port=6379,)
 
 API_ID = int("24722068")
