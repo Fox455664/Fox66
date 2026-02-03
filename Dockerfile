@@ -7,9 +7,11 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# 2. تحديث pip وتثبيت كل المكتبات (تمت إضافة unidecode وكل المكتبات السابقة)
+# 2. تحديث pip وتثبيت المكتبات
+# ✅ تم إضافة httpx==0.24.1 في البداية لحل مشكلة proxies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir \
+    httpx==0.24.1 \
     pyrogram==2.0.106 telethon pytube flask oldpyro pyromod pyro-listener \
     tgcrypto ntgcalls==1.1.3 py-tgcalls==1.1.6 yt-dlp unidecode \
     youtube-search-python youtube-search aiohttp Pillow numpy aiofiles \
