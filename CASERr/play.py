@@ -1,50 +1,35 @@
 import os
-import re
 import asyncio
 import random
 import aiohttp
 import aiofiles
-import requests
 import yt_dlp
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Union
-from io import BytesIO
-
+from youtubesearchpython.__future__ import VideosSearch
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from pyrogram import Client, filters
-from pyrogram.errors import (ChatAdminRequired, UserAlreadyParticipant, UserNotParticipant, FloodWait)
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-from pyrogram.enums import ChatType, ChatMemberStatus
-from pyrogram.raw.functions.phone import CreateGroupCall, DiscardGroupCall
-from pyrogram.raw.types import InputPeerChannel, InputPeerChat
-
+from pyrogram.types import InputMediaPhoto
 from pytgcalls import PyTgCalls, StreamType
-from pytgcalls.exceptions import (NoActiveGroupCall, TelegramServerError, AlreadyJoinedError)
-from pytgcalls.types import Update
+from pytgcalls.exceptions import (NoActiveGroupCall, AlreadyJoinedError)
 from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
-from pytgcalls.types.stream import StreamAudioEnded
 from pytgcalls.types import AudioQuality, VideoQuality
 
-from youtubesearchpython.__future__ import VideosSearch
-from youtube_search import YoutubeSearch
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
-from unidecode import unidecode
-
-# استيراد الإعدادات والقواعد
+# استيراد الإعدادات والقواعد (تأكد أن هذه الملفات موجودة لديك)
 from config import user, dev, call, logger, logger_mode, botname, appp
-from CASERr.daty import get_call, get_userbot, get_dev, get_logger
-from CASERr.CASERr import get_channel, devchannel, source, caes, devgroup, devuser, group, casery, johned, photosource, muusiic, suorce
+from CASERr.daty import get_call, get_userbot, get_dev
+from CASERr.CASERr import johned, photosource, suorce
 
 # --- متغيرات القائمة ---
 playlist = {}
-hossamm = [] # لتخزين مسار الملف الحالي للتقديم والتأخير
+hossamm = [] 
 vidd = {}
 namecha = {}
 user_mentio = {}
 thu = {}
 phot = {}
-playing = {}
-Music = {}
+
+# تأكد من وجود مجلد الصور
+if not os.path.isdir("photos"):
+    os.makedirs("photos")
 
 # --- وظائف مساعدة للصورة ---
 def changeImageSize(maxWidth, maxHeight, image):
@@ -55,29 +40,18 @@ def changeImageSize(maxWidth, maxHeight, image):
     newImage = image.resize((newWidth, newHeight))
     return newImage
 
-def make_col():
-    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-def truncate(text):
-    words = text.split(" ")
-    text1, text2 = "", ""
-    for i in words:
-        if len(text1) + len(i) < 30: text1 += " " + i
-        elif len(text2) + len(i) < 30: text2 += " " + i
-    return [text1.strip(), text2.strip()]
-
 # --- توليد صورة التشغيل ---
 async def gen_bot_caesar(client, bot_username, OWNER_ID, CASER, message, videoid):
+    # إذا الصورة موجودة مسبقاً
     if os.path.isfile(f"photos/{videoid}_{bot_username}.jpg"):
         return f"photos/{videoid}_{bot_username}.jpg"
-    url = f"https://www.youtube.com/watch?v={videoid}"
+    
     try:
+        # رابط الفيديو لجلب الصورة
+        url = f"https://www.youtube.com/watch?v={videoid}"
         results = VideosSearch(url, limit=1)
-        for result in (await results.next())["result"]:
-            title = result.get("title", "Unsupported Title")
-            duration = result.get("duration", "Unknown")
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            views = result.get("viewCount", {}).get("short", "Unknown")
+        res = (await results.next())["result"][0]
+        thumbnail = res["thumbnails"][0]["url"].split("?")[0]
 
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as resp:
@@ -92,16 +66,26 @@ async def gen_bot_caesar(client, bot_username, OWNER_ID, CASER, message, videoid
         enhancer = ImageEnhance.Brightness(background)
         image2 = enhancer.enhance(0.6)
         
-        # إضافة لمسات السورس
+        # إضافة اسم السورس
         draw = ImageDraw.Draw(image2)
-        font2 = ImageFont.truetype("font.ttf", 70)
-        draw.text((350, 10), f"{suorce}", fill="white", font=font2)
+        # تأكد من وجود ملف الخط font.ttf في مجلد البوت أو غير المسار
+        try:
+            font2 = ImageFont.truetype("font.ttf", 70)
+            draw.text((350, 10), f"{suorce}", fill="white", font=font2)
+        except:
+            pass # لو الخط مش موجود مش مشكلة
         
-        image2.convert("RGB").save(f"photos/{videoid}_{bot_username}.jpg")
-        os.remove(f"thumb{videoid}.png")
-        return f"photos/{videoid}_{bot_username}.jpg"
+        final_path = f"photos/{videoid}_{bot_username}.jpg"
+        image2.convert("RGB").save(final_path)
+        
+        if os.path.isfile(f"thumb{videoid}.png"):
+            os.remove(f"thumb{videoid}.png")
+            
+        return final_path
+
     except Exception as e:
         print(f"Image Gen Error: {e}")
+        # في حالة الفشل، نرجع صورة افتراضية لتجنب خطأ NoneType
         return photosource
 
 # --- وظيفة الانضمام وفتح الكول تلقائياً ---
@@ -109,8 +93,11 @@ async def join_call(bot_username, OWNER_ID, client, message, audio_file, group_i
     userbot = await get_userbot(bot_username)
     hoss = await get_call(bot_username)    
     
+    # تأكد أن الصورة ليست None
+    if not photo:
+        photo = photosource
+
     file_path = audio_file
-    # إعدادات الجودة الفائقة
     audio_stream_quality = AudioQuality.STUDIO
     video_stream_quality = VideoQuality.FHD
     
@@ -122,8 +109,8 @@ async def join_call(bot_username, OWNER_ID, client, message, audio_file, group_i
         hossamm.append(file_path)
         return True
     except NoActiveGroupCall:
-        # الحساب المساعد يفتح الكول
         try:
+            from pyrogram.raw.functions.phone import CreateGroupCall
             await userbot.invoke(CreateGroupCall(
                 peer=await userbot.resolve_peer(group_id),
                 random_id=int(os.urandom(4).hex(), 16)
@@ -133,11 +120,10 @@ async def join_call(bot_username, OWNER_ID, client, message, audio_file, group_i
             hossamm.clear()
             hossamm.append(file_path)
             return True
-        except Exception:
-            await message.reply_text("❌ الحساب المساعد يحتاج صلاحية (إدارة المكالمات) لفتح الكول تلقائياً.")
+        except Exception as e:
+            await message.reply_text(f"❌ خطأ في فتح الكول: {e}")
             return False
     except AlreadyJoinedError:
-        # إضافة للقائمة إذا كان البوت شغال فعلاً
         playlist.setdefault(group_id, []).append(file_path)
         vidd.setdefault(group_id, []).append(vid)
         thu.setdefault(group_id, []).append(thum)
@@ -150,22 +136,7 @@ async def join_call(bot_username, OWNER_ID, client, message, audio_file, group_i
         print(f"Join Error: {e}")
         return False
 
-# --- أوامر التقديم والتاخير (10 ثواني) ---
-@Client.on_message(filters.command(["تقديم", "قدام"], "") & filters.group)
-async def seek_forward(client, message):
-    bot_username = client.me.username
-    hoss = await get_call(bot_username)
-    if not hossamm: return await message.reply_text("مفيش حاجة شغالة حالياً!")
-    try:
-        await hoss.change_stream(message.chat.id, AudioVideoPiped(hossamm[0], additional_ffmpeg_parameters="-ss 00:00:10", audio_parameters=AudioQuality.STUDIO, video_parameters=VideoQuality.FHD))
-        await message.reply_text("✅ تم التقديم 10 ثواني")
-    except: pass
-
-@Client.on_message(filters.command(["تاخير", "ورا"], "") & filters.group)
-async def seek_back(client, message):
-    await message.reply_text("⏳ ميزة التأخير تتطلب إعادة تحميل الملف، سيتم توفيرها في التحديث القادم.")
-
-# --- أمر التشغيل الرئيسي (شغل / فيديو) ---
+# --- الأوامر ---
 @Client.on_message(filters.command(["شغل", "تشغيل", "فيد", "فديو", "/play", "/vplay"], "") & filters.group)
 async def play_handler(client, message):
     if await johned(client, message): return
@@ -188,26 +159,50 @@ async def play_handler(client, message):
 
     mm = await message.reply_text("🔎 جاري البحث والتحميل...")
     
-    # البحث
-    search = VideosSearch(text, limit=1)
-    res = (await search.next())["result"][0]
-    videoid = res["id"]
-    thum = res["title"]
-    vid = True if ("v" in message.command[0] or "ف" in message.command[0]) else False
-    
-    # تحميل
-    link = f"https://www.youtube.com/watch?v={videoid}"
-    audio_file = await download_yt(bot_username, link, vid)
-    
-    if audio_file:
-        photo = await gen_bot_caesar(client, bot_username, OWNER_ID, "Owner", message, videoid)
-        await join_call(bot_username, OWNER_ID, client, message, audio_file, group_id, vid, message.from_user.mention, photo, thum, message.chat.title)
+    try:
+        # البحث
+        search = VideosSearch(text, limit=1)
+        # هنا سيحدث الخطأ إذا لم يتم تثبيت نسخة httpx القديمة
+        res = (await search.next())["result"][0]
+        videoid = res["id"]
+        thum = res["title"]
+        vid = True if ("v" in message.command[0] or "ف" in message.command[0]) else False
+        
+        # تحميل
+        link = f"https://www.youtube.com/watch?v={videoid}"
+        audio_file = await download_yt(bot_username, link, vid)
+        
+        if audio_file:
+            photo = await gen_bot_caesar(client, bot_username, OWNER_ID, "Owner", message, videoid)
+            # فحص إضافي للتأكد من الصورة
+            if not photo or not os.path.exists(photo):
+                photo = photosource
+                
+            await join_call(bot_username, OWNER_ID, client, message, audio_file, group_id, vid, message.from_user.mention, photo, thum, message.chat.title)
+        else:
+            await message.reply_text("❌ فشل التحميل.")
+            
+    except Exception as e:
+        await message.reply_text(f"❌ حدث خطأ: {e}")
+        print(f"Play Error: {e}")
     
     await mm.delete()
 
 async def download_yt(bot_username, link, video=False):
+    # استخدام cookies لضمان التحميل من يوتيوب
+    cookies_path = "cookies.txt" if os.path.exists("cookies.txt") else None
+    
+    opts = [
+        "yt-dlp",
+        "-g",
+        "-f", "bestvideo+bestaudio/best" if video else "bestaudio",
+        link
+    ]
+    if cookies_path:
+        opts.extend(["--cookies", cookies_path])
+
     proc = await asyncio.create_subprocess_exec(
-        "yt-dlp", "-g", "-f", "bestvideo+bestaudio/best" if video else "bestaudio", link,
+        *opts,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
     stdout, _ = await proc.communicate()
@@ -215,28 +210,32 @@ async def download_yt(bot_username, link, video=False):
         return stdout.decode().strip()
     return None
 
-# --- التحكم (ايقاف، كمل، اسكت) ---
+# --- التحكم ---
 @Client.on_message(filters.command(["اسكت", "ايقاف", "انهاء", "stop"], "") & filters.group)
 async def stop_music(client, message):
     hoss = await get_call(client.me.username)
     try:
-        playlist[message.chat.id].clear()
+        if message.chat.id in playlist:
+            playlist[message.chat.id].clear()
         await hoss.leave_group_call(message.chat.id)
-        await message.reply_text("✅ تم إنهاء التشغيل وسكتنا خلاص 🤐")
+        await message.reply_text("✅ تم إنهاء التشغيل.")
     except:
-        await message.reply_text("❌ مفيش حاجة شغالة أصلاً!")
+        await message.reply_text("❌ البوت غير مشغل أصلاً.")
 
 @Client.on_message(filters.command(["توقف", "وقف", "pause"], "") & filters.group)
 async def pause_music(client, message):
     hoss = await get_call(client.me.username)
-    await hoss.pause_stream(message.chat.id)
-    await message.reply_text("⏸ تم إيقاف التشغيل مؤقتاً")
+    try:
+        await hoss.pause_stream(message.chat.id)
+        await message.reply_text("⏸ تم الإيقاف مؤقتاً.")
+    except:
+        pass
 
 @Client.on_message(filters.command(["كمل", "استكمال", "resume"], "") & filters.group)
 async def resume_music(client, message):
     hoss = await get_call(client.me.username)
-    await hoss.resume_stream(message.chat.id)
-    await message.reply_text("▶️ تم استكمال التشغيل")
-
-# --- نهاية الملف ---
-
+    try:
+        await hoss.resume_stream(message.chat.id)
+        await message.reply_text("▶️ تم الاستكمال.")
+    except:
+        pass
